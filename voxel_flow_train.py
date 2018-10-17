@@ -251,6 +251,71 @@ def test(dataset_frame1, dataset_frame2, dataset_frame3):
       imwrite(file_name_label, target_np[-1,:,:,:])
       i += 1
       PSNR += 10*np.log10(255.0*255.0/np.sum(np.square(prediction_np-target_np)))
+      
+    print("Overall PSNR: %f db" % (PSNR/len(data_list)))
+    
+def test_recursive(frame1, frame2):
+  """Perform test on a trained model."""
+  with tf.Graph().as_default():
+
+    input_placeholder = tf.placeholder(tf.float32, shape=(None, 256, 256, 6))
+    target_placeholder = tf.placeholder(tf.float32, shape=(None, 256, 256, 3))
+    
+    # input_resized = tf.image.resize_area(input_placeholder, [128, 128])
+    # target_resized = tf.image.resize_area(target_placeholder,[128, 128])
+
+    # Prepare model.
+    model = Voxel_flow_model(is_train=True)
+    prediction = model.inference(input_placeholder)
+    # reproduction_loss, prior_loss = model.loss(prediction, target_placeholder)
+    reproduction_loss = model.loss(prediction, target_placeholder)
+    # total_loss = reproduction_loss + prior_loss
+    total_loss = reproduction_loss
+
+    # Create a saver and load.
+    saver = tf.train.Saver(tf.all_variables())
+    sess = tf.Session()
+
+    # Restore checkpoint from file.
+    if FLAGS.pretrained_model_checkpoint_path:
+      #assert tf.gfile.Exists(FLAGS.pretrained_model_checkpoint_path)
+      ckpt = tf.train.get_checkpoint_state(
+               FLAGS.pretrained_model_checkpoint_path)
+      restorer = tf.train.Saver()
+      restorer.restore(sess, ckpt.model_checkpoint_path)
+      print('%s: Pre-trained model restored from %s' %
+        (datetime.now(), ckpt.model_checkpoint_path))
+    
+    i = 0 
+    PSNR = 0
+
+    for iter in range(0, recursion_num):  
+      
+      frame_1_data = dataset.Dataset(frame1)
+      frame_3_data = dataset.Dataset(frame3)
+      
+      frame_2_data = np_zeros(frame_2_data.shape)
+      
+      feed_dict = {input_placeholder: np.concatenate((frame_1_data, frame_1_data3), 3),
+                    target_placeholder: batch_data_frame2}
+      # Run single step update.
+      prediction_np, target_np, loss_value = sess.run([prediction,
+                                                      target_placeholder,
+                                                      total_loss],
+                                                      feed_dict = feed_dict)
+      
+      print("Loss for image %d: %f" % (i,loss_value))
+      file_name = FLAGS.test_image_dir+str(i)+'_out.png'
+      # file_name_label = FLAGS.test_image_dir+str(i)+'_gt.png'
+      imwrite(file_name, prediction_np[-1,:,:,:])
+      imwrite(file_name_label, target_np[-1,:,:,:])
+      i += 1
+      PSNR += 10*np.log10(255.0*255.0/np.sum(np.square(prediction_np-target_np)))
+      
+      
+      fram11 = frame3
+      frame3 = prediction_np[-1,:,:,:]
+      
     print("Overall PSNR: %f db" % (PSNR/len(data_list)))
       
 if __name__ == '__main__':
@@ -280,3 +345,12 @@ if __name__ == '__main__':
     ucf101_dataset_frame3 = dataset.Dataset(data_list_path_frame3) 
     
     test(ucf101_dataset_frame1, ucf101_dataset_frame2, ucf101_dataset_frame3)
+    
+  elif FLAGS.subset == 'test_recursive':
+    
+    frame1 =
+    frame2 = 
+    
+    recursion_num = 100    
+    
+    test_recursive(frame1, frame2, recursion_num)
