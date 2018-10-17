@@ -1,7 +1,8 @@
 """Implements a dataset class for handling image data"""
 from utils.image_utils import imread, imsave
+import os
 
-DATA_PATH_BASE = '/home/VoxelFlow/dataset/ucf101_triplets/'
+DATA_PATH_BASE = "/home/paperspace/Documents/voxel-flow/dataset/Robozee/"
 
 class Dataset(object):
   def __init__(self, data_list_file=None, process_func=None):
@@ -18,7 +19,8 @@ class Dataset(object):
     """Reads the data list_file into python list
     """
     f = open(self.data_list_file)
-    data_list =  [DATA_PATH_BASE+line.rstrip() for line in f]
+
+    data_list =  [os.path.join(DATA_PATH_BASE, line.rstrip().replace('\\','/')) for line in f]
     self.data_list = data_list
     return data_list
 

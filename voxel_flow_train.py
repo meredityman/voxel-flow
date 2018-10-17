@@ -52,7 +52,7 @@ def train(dataset_frame1, dataset_frame2, dataset_frame3):
 
     # Prepare model.
     model = Voxel_flow_model()
-    prediction = model.inference(input_placeholder) d
+    prediction = model.inference(input_placeholder)
     # reproduction_loss, prior_loss = model.loss(prediction, target_placeholder)
     reproduction_loss = model.loss(prediction, target_placeholder)
     # total_loss = reproduction_loss + prior_loss
@@ -68,18 +68,18 @@ def train(dataset_frame1, dataset_frame2, dataset_frame3):
 
     # Create summaries
     summaries = tf.get_collection(tf.GraphKeys.SUMMARIES)
-    summaries.append(tf.scalar_summary('total_loss', total_loss))
-    summaries.append(tf.scalar_summary('reproduction_loss', reproduction_loss))
+    summaries.append(tf.summary.scalar('total_loss', total_loss))
+    summaries.append(tf.summary.scalar('reproduction_loss', reproduction_loss))
     # summaries.append(tf.scalar_summary('prior_loss', prior_loss))
-    summaries.append(tf.image_summary('Input Image', input_placeholder, 3))
-    summaries.append(tf.image_summary('Output Image', prediction, 3))
-    summaries.append(tf.image_summary('Target Image', target_placeholder, 3))
+    summaries.append(tf.summary.image('Input Image', input_placeholder, 3))
+    summaries.append(tf.summary.image('Output Image', prediction, 3))
+    summaries.append(tf.summary.image('Target Image', target_placeholder, 3))
 
     # Create a saver.
     saver = tf.train.Saver(tf.all_variables())
 
     # Build the summary operation from the last tower summaries.
-    summary_op = tf.merge_all_summaries()
+    summary_op = tf.summary.merge_all()
 
     # Build an initialization operation to run below.
     init = tf.initialize_all_variables()
@@ -87,7 +87,7 @@ def train(dataset_frame1, dataset_frame2, dataset_frame3):
     sess.run(init)
 
     # Summary Writter
-    summary_writer = tf.train.SummaryWriter(
+    summary_writer = tf.summary.FileWriter(
       FLAGS.train_dir,
       graph=sess.graph)
 
@@ -118,7 +118,7 @@ def train(dataset_frame1, dataset_frame2, dataset_frame3):
     # load_fn_frame3 = partial(dataset_frame3.process_func)
     # p_queue_frame3 = PrefetchQueue(load_fn_frame3, data_list_frame3, FLAGS.batch_size, shuffle=False, num_workers=num_workers)
 
-    for step in xrange(0, FLAGS.max_steps):
+    for step in range(0, FLAGS.max_steps):
       batch_idx = step % epoch_num
       
       batch_data_list_frame1 = data_list_frame1[int(batch_idx * FLAGS.batch_size) : int((batch_idx + 1) * FLAGS.batch_size)]
@@ -199,7 +199,7 @@ def test(dataset_frame1, dataset_frame2, dataset_frame3):
 
     # Restore checkpoint from file.
     if FLAGS.pretrained_model_checkpoint_path:
-      assert tf.gfile.Exists(FLAGS.pretrained_model_checkpoint_path)
+      #assert tf.gfile.Exists(FLAGS.pretrained_model_checkpoint_path)
       ckpt = tf.train.get_checkpoint_state(
                FLAGS.pretrained_model_checkpoint_path)
       restorer = tf.train.Saver()
@@ -225,9 +225,9 @@ def test(dataset_frame1, dataset_frame2, dataset_frame3):
       line_image_frame2 = dataset_frame2.process_func(data_list_frame2[id_img])
       line_image_frame3 = dataset_frame3.process_func(data_list_frame3[id_img])
       
-      batch_data_frame1 = [dataset_frame1.process_func(ll) for ll in data_list_frame1[0:63]]
-      batch_data_frame2 = [dataset_frame2.process_func(ll) for ll in data_list_frame2[0:63]]
-      batch_data_frame3 = [dataset_frame3.process_func(ll) for ll in data_list_frame3[0:63]]
+      batch_data_frame1 = [dataset_frame1.process_func(ll) for ll in data_list_frame1[0:31]]
+      batch_data_frame2 = [dataset_frame2.process_func(ll) for ll in data_list_frame2[0:31]]
+      batch_data_frame3 = [dataset_frame3.process_func(ll) for ll in data_list_frame3[0:31]]
       
       batch_data_frame1.append(line_image_frame1)
       batch_data_frame2.append(line_image_frame2)
@@ -259,9 +259,9 @@ if __name__ == '__main__':
 
   if FLAGS.subset == 'train':
     
-    data_list_path_frame1 = "data_list/ucf101_train_files_frame1.txt"
-    data_list_path_frame2 = "data_list/ucf101_train_files_frame2.txt"
-    data_list_path_frame3 = "data_list/ucf101_train_files_frame3.txt"
+    data_list_path_frame1 = "data_list/train_files_frame1.txt"
+    data_list_path_frame2 = "data_list/train_files_frame2.txt"
+    data_list_path_frame3 = "data_list/train_files_frame3.txt"
     
     ucf101_dataset_frame1 = dataset.Dataset(data_list_path_frame1) 
     ucf101_dataset_frame2 = dataset.Dataset(data_list_path_frame2) 
@@ -271,9 +271,9 @@ if __name__ == '__main__':
   
   elif FLAGS.subset == 'test':
     
-    data_list_path_frame1 = "data_list/ucf101_test_files_frame1.txt"
-    data_list_path_frame2 = "data_list/ucf101_test_files_frame2.txt"
-    data_list_path_frame3 = "data_list/ucf101_test_files_frame3.txt"
+    data_list_path_frame1 = "data_list/test_files_frame1.txt"
+    data_list_path_frame2 = "data_list/test_files_frame2.txt"
+    data_list_path_frame3 = "data_list/test_files_frame3.txt"
     
     ucf101_dataset_frame1 = dataset.Dataset(data_list_path_frame1) 
     ucf101_dataset_frame2 = dataset.Dataset(data_list_path_frame2) 
